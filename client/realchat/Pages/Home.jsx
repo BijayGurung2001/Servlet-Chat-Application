@@ -1,26 +1,41 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react'
+import io from 'socket.io-client'
 
-const Home = ({username,setUsername,room,setRoom, Socket}) => {
-    const navigate=useNavigate();
-    const joinRoom=()=>{
-        if(room!== '' && username !==''){
-            Socket.emit('join_room',{username,room});
+const socket=io('http://localhost:4000');
+
+const Home = () => {
+    const [messages, setMessages]=useState([]);
+    const [message, setMessage]=useState('')
+
+    useEffect(()=>{
+        socket.on('message',(data)=>{
+            setMessages([...message, data])
+            console.log(messages)
+        });
+        return()=>{
+            socket.disconnect()
         }
-        navigate('/chat',{replace:true});
+    },[messages]);
+    const handleSendMessage=()=>{
+        socket.emit('message',{text:message});
+        setMessage('');
     }
   return (
     <div>
-        <h1>{`<>Dev Rooms <>`}</h1>
-        <input placeholder='username' onChange={(e)=>setUsername(e.target.value)}/><br></br>
-        <select onChange={(e)=>setRoom(e.target.value)}>
-            <options>--Select Rooms --</options>
-            <options value="'javascript">Javascript</options>
-            <options value="'node">Node</options>
-            <options value="'express">Express</options>
-            <options value="'react">React</options>
-        </select><br></br>
-        <button onClick={joinRoom}>Join Room</button>
+        <div>
+{messages.map((msg,index)=>{
+    <div key={index}>{msg.text}</div>
+    
+})}
+</div>
+<div>
+    <input 
+    type="text"
+    value={message}
+    onChange={(e)=>setMessage(e.target.value)}
+    />
+    <button onClick={handleSendMessage}>Send</button>
+</div>
     </div>
   )
 }
