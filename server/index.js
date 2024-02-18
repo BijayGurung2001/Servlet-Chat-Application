@@ -2,24 +2,23 @@ const express=require('express')
 const app=express();
 const http=require('http');
 const cors=require('cors');
+const socketIO =require('socket.io')
 
 app.use(cors());
 const server=http.createServer(app);
 
-//create an io server and allow for cors
-const io= new server(server,{
-    cors:{
-        origin:'http:localhost:3000',
-        methods:['GET','POST'],
-    }
-})
-//listen for when the client connects via socket.io-client
-io.on('connect',(socket)=>{
-    console.log(`user Connected ${socket.id}`)
-})
+//create an io server 
+const io = socketIO(server);
 
-app.get('/',(req,res)=>{
-    res.send('Hello World')
+io.on('connetion',(socket)=>{
+    console.log('user connected');
+    socket.on('message',(data)=>{
+        io.emit('message',data);
+
+    });
+    socket.on('disconnect',()=>{
+        console.log('user disconnect');
+    });
 })
 
 server.listen(4000,()=>'server is running on port 4000')
